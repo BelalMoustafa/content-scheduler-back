@@ -1,0 +1,11 @@
+{
+    "name": "Platforms",
+    "alias": "platforms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Platforms\\Providers\\PlatformsServiceProvider"
+    ],
+    "files": []
+}

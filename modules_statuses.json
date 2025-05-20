@@ -1,3 +1,6 @@
 {
-    "Auth": true
+    "Auth": true,
+    "Posts": true,
+    "Platforms": true,
+    "Users": true
 }
