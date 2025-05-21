@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Illuminate\Console\Scheduling\Schedule;
 
 class PostsServiceProvider extends ServiceProvider
 {
@@ -27,6 +28,16 @@ class PostsServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+
+        $this->app->booted(function () {
+            $schedule = $this->app->make(Schedule::class);
+
+            // Run the publishing job every minute
+            $schedule->job(new \Modules\Posts\Jobs\PublishScheduledPosts)
+                    ->everyMinute()
+                    ->withoutOverlapping()
+                    ->runInBackground();
+        });
     }
 
     /**

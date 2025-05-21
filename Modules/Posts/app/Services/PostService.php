@@ -104,6 +104,14 @@ class PostService
     }
 
     /**
+     * Get posts that are due for publishing
+     */
+    public function getDuePosts(): Collection
+    {
+        return $this->postRepository->getDuePosts();
+    }
+
+    /**
      * Publish post to platforms
      */
     public function publishPost(Post $post): void
@@ -113,14 +121,18 @@ class PostService
         }
 
         $success = true;
+        $platformResults = [];
+
         foreach ($post->platforms as $platform) {
             try {
                 // Simulate publishing to platform
                 $this->simulatePublishToPlatform($post, $platform);
                 $platform->pivot->markAsPublished();
+                $platformResults[$platform->id] = 'published';
             } catch (\Exception $e) {
                 $success = false;
                 $platform->pivot->markAsFailed($e->getMessage());
+                $platformResults[$platform->id] = 'failed';
                 Log::error('Failed to publish post to platform', [
                     'post_id' => $post->id,
                     'platform_id' => $platform->id,
@@ -132,9 +144,15 @@ class PostService
         // Update post status based on platform publishing results
         if ($success) {
             $post->update(['status' => 'published']);
-            Log::info('Post published successfully', ['post_id' => $post->id]);
+            Log::info('Post published successfully', [
+                'post_id' => $post->id,
+                'platform_results' => $platformResults
+            ]);
         } else {
-            Log::warning('Post partially published', ['post_id' => $post->id]);
+            Log::warning('Post partially published', [
+                'post_id' => $post->id,
+                'platform_results' => $platformResults
+            ]);
         }
     }
 
@@ -146,9 +164,31 @@ class PostService
         // Simulate API call delay
         sleep(1);
 
+        // Validate platform-specific requirements
+        $this->validatePlatformRequirements($post, $platform);
+
         // Simulate random failures (10% chance)
         if (rand(1, 100) <= 10) {
             throw new \Exception("Failed to publish to {$platform->name}");
+        }
+    }
+
+    /**
+     * Validate platform-specific requirements
+     */
+    private function validatePlatformRequirements(Post $post, $platform): void
+    {
+        $limits = [
+            'twitter' => 280,
+            'linkedin' => 1300,
+            'instagram' => null, // unlimited
+            'facebook' => 63206
+        ];
+
+        $limit = $limits[$platform->type] ?? null;
+
+        if ($limit !== null && strlen($post->content) > $limit) {
+            throw new \Exception("Content exceeds {$platform->name}'s character limit of {$limit} characters");
         }
     }
 }
