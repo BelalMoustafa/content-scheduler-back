@@ -1,6 +1,5 @@
 {
     "Auth": true,
     "Posts": true,
-    "Platforms": true,
-    "Users": true
+    "Platforms": true
 }
