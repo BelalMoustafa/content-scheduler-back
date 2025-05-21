@@ -194,7 +194,6 @@ Auth/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   └── Api/
 │   │   │       ├── AuthController.php
 │   │   │       └── RoleController.php
 │   │   └── Requests/
