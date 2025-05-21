@@ -9,17 +9,22 @@ use Modules\Auth\Repositories\AuthRepositoryInterface;
 class AuthService
 {
     public function __construct(
-        private AuthRepositoryInterface $authRepository
+        private AuthRepositoryInterface $authRepository,
+        private PermissionService $permissionService
     ) {}
 
     public function register(array $data): array
     {
         $data['password'] = Hash::make($data['password']);
         $user = $this->authRepository->create($data);
+
+        // Assign default role
+        $this->permissionService->assignDefaultRole($user);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [
-            'user' => $user,
+            'user' => $user->load('roles'),
             'token' => $token
         ];
     }
@@ -35,7 +40,7 @@ class AuthService
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [
-            'user' => $user,
+            'user' => $user->load('roles'),
             'token' => $token
         ];
     }
