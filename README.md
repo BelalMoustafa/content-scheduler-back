@@ -59,6 +59,11 @@ php artisan db:seed --class=Modules\\Platforms\\Database\\Seeders\\PlatformSeede
 php artisan serve
 ```
 
+8. Start the scheduler (required for automated post publishing):
+```bash
+php artisan schedule:work
+```
+
 ## Project Structure
 
 ```
@@ -85,8 +90,12 @@ backend/
 │   │   └── routes/
 │   └── Posts/
 │       ├── app/
+│       │   ├── Console/
+│       │   │   └── Commands/
 │       │   ├── Http/
+│       │   ├── Jobs/
 │       │   ├── Models/
+│       │   ├── Providers/
 │       │   ├── Repositories/
 │       │   └── Services/
 │       ├── database/
@@ -114,6 +123,43 @@ backend/
 - Post scheduling
 - Platform publishing
 - Post status tracking
+- Automated post publishing system
+
+## Automated Post Publishing
+
+The system includes an automated publishing system that runs every minute to process scheduled posts:
+
+### Components
+
+1. **Scheduled Job**
+   - Runs every minute via Laravel scheduler
+   - Processes all due posts
+   - Handles platform-specific publishing
+   - Includes error handling and logging
+
+2. **Console Command**
+   - Manual execution: `php artisan posts:publish`
+   - Useful for testing and manual intervention
+
+### Features
+
+- Automatic processing of scheduled posts
+- Platform-specific validation
+- Detailed logging and monitoring
+- Error handling and retry mechanisms
+- Status tracking per platform
+
+### Setup
+
+1. Ensure the Laravel scheduler is running:
+```bash
+php artisan schedule:work
+```
+
+2. For production, add to crontab:
+```bash
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
 
 ## API Documentation
 

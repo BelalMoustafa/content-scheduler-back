@@ -11,16 +11,22 @@ The Posts module provides a comprehensive solution for creating, scheduling, and
 ```
 Posts/
 ├── app/
+│   ├── Console/
+│   │   └── Commands/
+│   │       └── PublishScheduledPostsCommand.php
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   └── 
-│   │   │       └── PostController.php
+│   │   │   └── PostController.php
 │   │   └── Requests/
 │   │       ├── CreatePostRequest.php
 │   │       └── UpdatePostRequest.php
+│   ├── Jobs/
+│   │   └── PublishScheduledPosts.php
 │   ├── Models/
 │   │   ├── Post.php
 │   │   └── PostPlatform.php
+│   ├── Providers/
+│   │   └── PostsServiceProvider.php
 │   ├── Repositories/
 │   │   ├── PostRepository.php
 │   │   └── PostRepositoryInterface.php
@@ -48,6 +54,51 @@ Posts/
 - Daily post limits
 - Post status tracking
 - Media URL support
+- Automated post publishing system
+
+## Automated Publishing System
+
+The module includes an automated system for publishing scheduled posts:
+
+### Components
+
+1. **PublishScheduledPosts Job**
+   - Runs every minute via Laravel scheduler
+   - Processes all due posts
+   - Handles platform-specific publishing
+   - Includes error handling and logging
+
+2. **PublishScheduledPostsCommand**
+   - Console command for manual execution
+   - Command: `php artisan posts:publish`
+   - Useful for testing and manual intervention
+
+### Publishing Process
+
+1. **Post Selection**
+   - Finds posts where:
+     - status = 'scheduled'
+     - scheduled_time <= now()
+     - Not fully published
+
+2. **Platform Processing**
+   - Processes each platform independently
+   - Validates platform-specific requirements
+   - Simulates publishing with random failures
+   - Updates platform status (published/failed)
+
+3. **Status Updates**
+   - Updates post status based on platform results:
+     - All successful → 'published'
+     - Partial success → remains 'scheduled'
+   - Records detailed status per platform
+
+### Monitoring
+
+- Detailed logging of all publishing attempts
+- Platform-specific success/failure tracking
+- Error messages for failed attempts
+- Post status history
 
 ## API Endpoints
 
@@ -136,6 +187,11 @@ Authorization: Bearer {token}
 ### Running Tests
 ```bash
 php artisan test --filter=Posts
+```
+
+### Manual Publishing
+```bash
+php artisan posts:publish
 ```
 
 ### Adding New Features
