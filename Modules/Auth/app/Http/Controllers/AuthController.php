@@ -2,55 +2,60 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controller;
+use Modules\Auth\Http\Requests\LoginRequest;
+use Modules\Auth\Http\Requests\RegisterRequest;
+use Modules\Auth\Http\Requests\UpdateProfileRequest;
+use Modules\Auth\Services\AuthService;
 
 class AuthController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use ApiResponse;
+
+    public function __construct(
+        private AuthService $authService
+    ) {}
+
+    public function register(RegisterRequest $request): JsonResponse
     {
-        return view('auth::index');
+        $result = $this->authService->register($request->validated());
+        return $this->okResponse('Registration successful.', $result);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function login(LoginRequest $request): JsonResponse
     {
-        return view('auth::create');
+        $result = $this->authService->login(
+            $request->input('email'),
+            $request->input('password')
+        );
+
+        if (!$result) {
+            return $this->unauthorizedResponse('Invalid credentials.');
+        }
+
+        return $this->okResponse('Login successful.', $result);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {}
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
+    public function logout(): JsonResponse
     {
-        return view('auth::show');
+        $this->authService->logout(auth()->user());
+        return $this->okResponse('Logged out successfully.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
+    public function me(): JsonResponse
     {
-        return view('auth::edit');
+        return $this->okResponse('Profile retrieved successfully.', auth()->user());
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id) {}
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        $user = $this->authService->updateProfile(
+            auth()->user(),
+            $request->validated()
+        );
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id) {}
+        return $this->okResponse('Profile updated successfully.', $user);
+    }
 }
